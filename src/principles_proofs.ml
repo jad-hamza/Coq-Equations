@@ -92,18 +92,18 @@ let wf_obligations_base info =
 
 let simp_eqns l =
   tclREPEAT (tclTHENLIST [Proofview.V82.of_tactic 
-			     (Autorewrite.autorewrite (Tacticals.New.tclIDTAC) l);
+			     (Autorewrite.autorewrite false (Tacticals.New.tclIDTAC) l);
 			  (* simpl_star; Autorewrite.autorewrite tclIDTAC l; *)
 			  tclTRY (eauto_with_below l)])
 
 let simp_eqns_in clause l =
   tclREPEAT (tclTHENLIST 
 		[Proofview.V82.of_tactic
-		    (Autorewrite.auto_multi_rewrite l clause);
+		    (Autorewrite.auto_multi_rewrite false l clause);
 		 tclTRY (eauto_with_below l)])
 
 let autorewrites b = 
-  tclREPEAT (Proofview.V82.of_tactic (Autorewrite.autorewrite Tacticals.New.tclIDTAC [b]))
+  tclREPEAT (Proofview.V82.of_tactic (Autorewrite.autorewrite false Tacticals.New.tclIDTAC [b]))
 
 let autorewrite_one b =
   let rew_rules = Autorewrite.find_rewrites b in
@@ -115,7 +115,7 @@ let autorewrite_one b =
        let tac =
          Proofview.tclBIND
          (Tacticals.New.pf_constr_of_global global)
-         (if r.Autorewrite.rew_l2r then Equality.rewriteLR else Equality.rewriteRL)
+         (if r.Autorewrite.rew_l2r then Equality.rewriteLR false else Equality.rewriteRL false)
        in
        Proofview.tclOR
          (if !debug then
@@ -451,7 +451,7 @@ let rec aux_ind_fun info chop unfs unfids = function
           tclTRY (to82 (Proofview.tclBIND
                         (Tacticals.New.pf_constr_of_global
                               (Equations_common.global_reference i))
-                        Equality.rewriteLR))) unfids;
+                        (Equality.rewriteLR false)))) unfids;
           observe "solving premises of compute rule" (to82 (solve_ind_rec_tac info.term_info))]))
 
   | Mapping (_, s) -> aux_ind_fun info chop unfs unfids s
@@ -685,7 +685,7 @@ let prove_unfolding_lemma info where_map proj f_cst funf_cst split unfold_split 
              let id = pf_get_new_id id gl in
              if Evar.equal ev2 ev then
                tclTHENLIST
-               [to82 (Equality.replace_by a1 a2
+               [to82 (Equality.replace_by false a1 a2
                                           (of82 (tclTHENLIST [solve_eq])));
                 to82 (letin_tac None (Name id) a2 None Locusops.allHypsAndConcl);
                 Proofview.V82.of_tactic (clear_body [id]); unfolds; aux s unfs] gl
@@ -734,7 +734,7 @@ let prove_unfolding_lemma info where_map proj f_cst funf_cst split unfold_split 
            assert_by (Name id) ty (of82 (tclTHEN (to82 (keep [])) (to82 (tclABSTRACT (Some id) tac))))
          in
          tclTHENLIST [Refiner.tclEVARS !evd; to82 tac;
-                      to82 (Equality.rewriteLR (mkVar id));
+                      to82 (Equality.rewriteLR false (mkVar id));
                       acc] gl
        in
        let wheretacs =

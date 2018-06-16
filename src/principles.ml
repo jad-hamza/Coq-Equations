@@ -1047,7 +1047,7 @@ let build_equations with_ind env evd ?(alias:(constr * Names.Id.t * splitting) o
   let poly = is_polymorphic info in
   let statement i filter (ctx, fl, flalias, pats, ty, f', (refine, cut), c) =
     let hd, unf = match flalias with
-      | Some (f', unf, _) -> f', Equality.rewriteLR (constr_of_ident unf)
+      | Some (f', unf, _) -> f', Equality.rewriteLR false (constr_of_ident unf)
       | None -> fl,
         if eq_constr !evd fl (of_constr f) then
 	  Tacticals.New.tclORELSE Tactics.reflexivity (of82 (unfold_constr !evd (of_constr f)))
